@@ -26,7 +26,7 @@ external_components:
 
 # Google Font for display testing
 font:
-  - file: "gfont://Roboto"
+  - file: "gfonts://Roboto"
     id: font_roboto
     size: 24
 

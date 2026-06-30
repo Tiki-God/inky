@@ -45,7 +45,7 @@ external_components:
     components: [ inky_impression_4 ]
 
 font:
-  - file: "gfont://Roboto"
+  - file: "gfonts://Roboto"
     id: font_roboto
     size: 24
 
