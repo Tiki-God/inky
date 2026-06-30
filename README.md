@@ -49,7 +49,7 @@ font:
 display:
   - platform: inky_impression_4
     id: my_display
-    cs_pin: GPIO5
+    cs_pin: GPIO14
     dc_pin: GPIO22
     reset_pin: GPIO21
     busy_pin: GPIO17
