@@ -130,25 +130,63 @@ void InkyImpression4::update() {
   if (this->buffer_ == nullptr) {
     return;
   }
+  if (this->state_ != STATE_IDLE) {
+    ESP_LOGW(TAG, "Display update requested but display is still busy");
+    return;
+  }
+  this->state_ = STATE_START_UPDATE;
+}
 
-  // 1. Call the lambda writer if one is configured
-  this->do_update_();
-  
-  // 2. Send command to update display (DTM1 = 0x10)
-  this->write_command_(0x10);
-  this->write_data_(this->buffer_, 128000);
-  
-  // 3. Power ON (PON = 0x04)
-  this->write_command_(0x04);
-  delay(200); // 0.2s
-  
-  // 4. Display Refresh (DRF = 0x12)
-  this->write_command_(0x12);
-  this->wait_until_idle_();
-  
-  // 5. Power OFF (POF = 0x02)
-  this->write_command_(0x02);
-  delay(200); // 0.2s
+void InkyImpression4::loop() {
+  switch (this->state_) {
+    case STATE_IDLE:
+      break;
+      
+    case STATE_START_UPDATE: {
+      ESP_LOGD(TAG, "Starting asynchronous display update...");
+      this->do_update_();
+      
+      this->write_command_(0x10);
+      this->write_data_(this->buffer_, 128000);
+      
+      this->write_command_(0x04);
+      
+      this->state_ = STATE_WAIT_POWER_ON;
+      this->state_timeout_ = millis() + 200;
+      break;
+    }
+    
+    case STATE_WAIT_POWER_ON: {
+      if (millis() >= this->state_timeout_) {
+        this->write_command_(0x12);
+        this->state_ = STATE_WAIT_REFRESH;
+        this->state_timeout_ = millis();
+      }
+      break;
+    }
+    
+    case STATE_WAIT_REFRESH: {
+      if (this->busy_pin_->digital_read() == true) {
+        this->write_command_(0x02);
+        this->state_ = STATE_WAIT_POWER_OFF;
+        this->state_timeout_ = millis() + 200;
+      } else if (millis() - this->state_timeout_ > 40000) {
+        ESP_LOGW(TAG, "Timeout waiting for display refresh to complete");
+        this->write_command_(0x02);
+        this->state_ = STATE_WAIT_POWER_OFF;
+        this->state_timeout_ = millis() + 200;
+      }
+      break;
+    }
+    
+    case STATE_WAIT_POWER_OFF: {
+      if (millis() >= this->state_timeout_) {
+        this->state_ = STATE_IDLE;
+        ESP_LOGD(TAG, "Asynchronous display update complete.");
+      }
+      break;
+    }
+  }
 }
 
 void InkyImpression4::draw_absolute_pixel_internal(int x, int y, Color color) {

@@ -29,6 +29,7 @@ class InkyImpression4 : public display::DisplayBuffer, public spi::SPIDevice<spi
   void setup() override;
   void dump_config() override;
   void update() override;
+  void loop() override;
 
   float get_setup_priority() const override { return setup_priority::PROCESSOR; }
 
@@ -44,6 +45,15 @@ class InkyImpression4 : public display::DisplayBuffer, public spi::SPIDevice<spi
   void write_data_(const uint8_t *buffer, size_t length);
   bool wait_until_idle_();
   void reset_();
+
+  enum State {
+    STATE_IDLE = 0,
+    STATE_START_UPDATE,
+    STATE_WAIT_POWER_ON,
+    STATE_WAIT_REFRESH,
+    STATE_WAIT_POWER_OFF
+  } state_{STATE_IDLE};
+  uint32_t state_timeout_{0};
 
   GPIOPin *dc_pin_{nullptr};
   GPIOPin *reset_pin_{nullptr};
