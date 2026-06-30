@@ -36,7 +36,7 @@ spi:
 external_components:
   - source:
       type: git
-      url: https://github.com/Tiki-God/inky
+      url: git@github.com:Tiki-God/inky.git
       ref: master
     components: [ inky_impression_4 ]
 
