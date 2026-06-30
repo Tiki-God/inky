@@ -150,7 +150,7 @@ void InkyImpression4::update() {
   delay(200); // 0.2s
 }
 
-void InkyImpression4::draw_absolute_pixel_t(int x, int y, Color color) {
+void InkyImpression4::draw_absolute_pixel_internal(int x, int y, Color color) {
   if (this->buffer_ == nullptr) return;
   if (x < 0 || x >= 640 || y < 0 || y >= 400) {
     return;

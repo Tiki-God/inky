@@ -19,7 +19,7 @@ enum BorderColor {
   BORDER_COLOR_CLEAN = 7,
 };
 
-class InkyImpression4 : public PollingComponent, public display::DisplayBuffer, public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW, spi::CLOCK_PHASE_LEADING, spi::DATA_RATE_4MHZ> {
+class InkyImpression4 : public display::DisplayBuffer, public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW, spi::CLOCK_PHASE_LEADING, spi::DATA_RATE_4MHZ> {
  public:
   void set_dc_pin(GPIOPin *dc_pin) { dc_pin_ = dc_pin; }
   void set_reset_pin(GPIOPin *reset_pin) { reset_pin_ = reset_pin; }
@@ -35,7 +35,7 @@ class InkyImpression4 : public PollingComponent, public display::DisplayBuffer, 
   display::DisplayType get_display_type() override { return display::DISPLAY_TYPE_COLOR; }
 
  protected:
-  void draw_absolute_pixel_t(int x, int y, Color color) override;
+  void draw_absolute_pixel_internal(int x, int y, Color color) override;
   int get_width_internal() override { return 640; }
   int get_height_internal() override { return 400; }
 
