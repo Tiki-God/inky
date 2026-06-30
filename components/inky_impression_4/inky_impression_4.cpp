@@ -1,5 +1,6 @@
 #include "inky_impression_4.h"
 #include "esphome/core/log.h"
+#include "esphome/core/application.h"
 #include <algorithm>
 
 namespace esphome {
@@ -205,6 +206,7 @@ bool InkyImpression4::wait_until_idle_() {
       ESP_LOGW(TAG, "Timeout waiting for display to be idle");
       return false;
     }
+    App.feed_wdt();
     delay(1);
   }
   return true;
