@@ -15,7 +15,7 @@ This component is converted from the official Pimoroni Python library and allows
 
 ## Configuration Example
 
-Below is a configuration template showing how to wire the custom component (relative to your local configuration folder) and initialize it in your ESPHome YAML.
+Below is a configuration template showing how to pull the custom component from your GitHub repository and initialize it in your ESPHome YAML.
 
 ```yaml
 esphome:
@@ -32,11 +32,13 @@ spi:
   mosi_pin: GPIO23
   miso_pin: GPIO19
 
-# Tell ESPHome to search the local components directory
+# Pull the component from the GitHub repository
 external_components:
   - source:
-      type: local
-      path: components
+      type: git
+      url: https://github.com/Tiki-God/inky
+      ref: master
+    components: [ inky_impression_4 ]
 
 font:
   - file: "gfont://Roboto"

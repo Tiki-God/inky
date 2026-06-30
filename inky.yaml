@@ -12,11 +12,13 @@ spi:
   mosi_pin: GPIO23
   miso_pin: GPIO19
 
-# Tell ESPHome to search the local components directory
+# Pull the component from the GitHub repository
 external_components:
   - source:
-      type: local
-      path: components
+      type: git
+      url: https://github.com/Tiki-God/inky
+      ref: master
+    components: [ inky_impression_4 ]
 
 # Google Font for display testing
 font:
