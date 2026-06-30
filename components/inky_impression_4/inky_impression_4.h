@@ -60,7 +60,7 @@ class InkyImpression4 : public display::DisplayBuffer, public spi::SPIDevice<spi
   GPIOPin *busy_pin_{nullptr};
   uint8_t border_color_{1}; // BORDER_COLOR_WHITE
 
-  uint8_t *buffer_{nullptr};
+  uint8_t *buffers_[4]{nullptr, nullptr, nullptr, nullptr};
 };
 
 }  // namespace inky_impression_4

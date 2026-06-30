@@ -55,15 +55,32 @@ void InkyImpression4::setup() {
   // Initialize SPI
   this->spi_setup();
   
-  // Allocate buffer (640 * 400 / 2 = 128,000 bytes)
-  this->buffer_ = new uint8_t[128000];
-  if (this->buffer_ == nullptr) {
-    ESP_LOGE(TAG, "Failed to allocate display buffer!");
+  // Allocate 4 split buffers of 32,000 bytes each to prevent allocation failures
+  // due to memory fragmentation on standard ESP32 (which lacks 128KB contiguous internal blocks).
+  bool allocated_all = true;
+  for (int i = 0; i < 4; i++) {
+    this->buffers_[i] = new (std::nothrow) uint8_t[32000];
+    if (this->buffers_[i] == nullptr) {
+      allocated_all = false;
+    }
+  }
+  
+  if (!allocated_all) {
+    ESP_LOGE(TAG, "Failed to allocate display buffers (fragmented memory)!");
+    for (int i = 0; i < 4; i++) {
+      if (this->buffers_[i] != nullptr) {
+        delete[] this->buffers_[i];
+        this->buffers_[i] = nullptr;
+      }
+    }
     this->mark_failed();
     return;
   }
+  
   // Initialize to White (1) -> (1 << 4) | 1 = 0x11
-  memset(this->buffer_, 0x11, 128000);
+  for (int i = 0; i < 4; i++) {
+    memset(this->buffers_[i], 0x11, 32000);
+  }
 
   // Perform Hardware Reset
   this->reset_();
@@ -127,7 +144,11 @@ void InkyImpression4::dump_config() {
 }
 
 void InkyImpression4::update() {
-  if (this->buffer_ == nullptr) {
+  bool allocated = true;
+  for (int i = 0; i < 4; i++) {
+    if (this->buffers_[i] == nullptr) allocated = false;
+  }
+  if (!allocated) {
     return;
   }
   if (this->state_ != STATE_IDLE) {
@@ -147,7 +168,9 @@ void InkyImpression4::loop() {
       this->do_update_();
       
       this->write_command_(0x10);
-      this->write_data_(this->buffer_, 128000);
+      for (int i = 0; i < 4; i++) {
+        this->write_data_(this->buffers_[i], 32000);
+      }
       
       this->write_command_(0x04);
       
@@ -190,7 +213,6 @@ void InkyImpression4::loop() {
 }
 
 void InkyImpression4::draw_absolute_pixel_internal(int x, int y, Color color) {
-  if (this->buffer_ == nullptr) return;
   if (x < 0 || x >= 640 || y < 0 || y >= 400) {
     return;
   }
@@ -199,12 +221,17 @@ void InkyImpression4::draw_absolute_pixel_internal(int x, int y, Color color) {
   int pixel_index = y * 640 + x;
   int byte_index = pixel_index / 2;
   
+  int buffer_idx = byte_index / 32000;
+  int sub_byte_index = byte_index % 32000;
+  
+  if (this->buffers_[buffer_idx] == nullptr) return;
+  
   if (pixel_index % 2 == 0) {
-    this->buffer_[byte_index] &= 0x0F;
-    this->buffer_[byte_index] |= (pixel_val << 4) & 0xF0;
+    this->buffers_[buffer_idx][sub_byte_index] &= 0x0F;
+    this->buffers_[buffer_idx][sub_byte_index] |= (pixel_val << 4) & 0xF0;
   } else {
-    this->buffer_[byte_index] &= 0xF0;
-    this->buffer_[byte_index] |= pixel_val & 0x0F;
+    this->buffers_[buffer_idx][sub_byte_index] &= 0xF0;
+    this->buffers_[buffer_idx][sub_byte_index] |= pixel_val & 0x0F;
   }
 }
 
