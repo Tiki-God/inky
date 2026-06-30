@@ -26,6 +26,10 @@ esp32:
   framework:
     type: arduino
 
+# Enable logging
+logger:
+  level: INFO
+
 # Configure the SPI Bus
 spi:
   clk_pin: GPIO18
